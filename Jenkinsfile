@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -7,25 +10,20 @@ pipeline {
             }
         }
         stage('Install Tools') {
-           steps {
-            sh '''
+            steps {
+                sh '''
                 which helm || curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-            
-                if ! which kubectl; then
-                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
-                    chmod +x kubectl
-                    mv kubectl /usr/local/bin/
-                fi
-            '''
-    }
-
+                which kubectl || (curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/)
+                '''
+            }
         }
         stage('Run Installer') {
             steps {
-                sh 'chmod +x ingress-nginx-argo.sh'
-                sh './ingress-nginx-argo.sh'
+                sh '''
+                chmod +x ingress-nginx-argo.sh
+                ./ingress-nginx-argo.sh
+                '''
             }
         }
     }
 }
-
