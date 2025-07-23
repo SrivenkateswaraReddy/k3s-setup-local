@@ -7,10 +7,18 @@ pipeline {
             }
         }
         stage('Install Tools') {
-            steps {
-                sh 'which helm || curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash'
-                sh 'which kubectl || curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/'
-            }
+           steps {
+        sh '''
+            which helm || curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            
+            if ! which kubectl; then
+                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
+                chmod +x kubectl
+                mv kubectl /usr/local/bin/
+            fi
+        '''
+    }
+
         }
         stage('Run Installer') {
             steps {
