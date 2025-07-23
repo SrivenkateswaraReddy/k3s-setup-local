@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/SrivenkateswaraReddy/k3s-setup-local.git'
+                git branch: 'main', url: 'https://github.com/SrivenkateswaraReddy/k3s-setup-local.git'
             }
         }
         stage('Install Tools') {
