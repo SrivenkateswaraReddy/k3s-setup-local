@@ -7,6 +7,7 @@
     helm_version: "v3.17.1"
     helm_arch: "linux-arm64"
     helm_tarball: "helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+    helm_url: "https://get.helm.sh/{{ helm_tarball }}"
 
   tasks:
     - name: Install prerequisites
@@ -26,7 +27,7 @@
       failed_when: false
       changed_when: false
 
-    - name: Install K3s if missing or wrong version
+    - name: Install K3s if missing or incorrect version
       shell: curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -
       when: "'{{ k3s_version }}' not in k3s_check.stdout"
 
@@ -38,7 +39,7 @@
 
     - name: Download Helm tarball
       get_url:
-        url: https://get.helm.sh/{{ helm_tarball }}
+        url: "{{ helm_url }}"
         dest: /tmp/{{ helm_tarball }}
       when: "'{{ helm_version }}' not in helm_check.stdout"
 
@@ -57,20 +58,26 @@
         remote_src: yes
       when: "'{{ helm_version }}' not in helm_check.stdout"
 
-    - name: Verify K3s version
+    - name: Remove Helm tarball
+      file:
+        path: /tmp/{{ helm_tarball }}
+        state: absent
+      when: "'{{ helm_version }}' not in helm_check.stdout"
+
+    - name: Verify installed K3s version
       command: k3s --version
       register: final_k3s_version
       changed_when: false
 
-    - name: Verify Helm version
+    - name: Verify installed Helm version
       command: helm version --short
       register: final_helm_version
       changed_when: false
 
     - name: Show installed K3s version
       debug:
-        msg: "{{ final_k3s_version.stdout }}"
+        msg: "Installed K3s version: {{ final_k3s_version.stdout }}"
 
     - name: Show installed Helm version
       debug:
-        msg: "{{ final_helm_version.stdout }}"
+        msg: "Installed Helm version: {{ final_helm_version.stdout }}"
