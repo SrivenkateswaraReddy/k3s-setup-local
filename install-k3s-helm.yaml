@@ -1,0 +1,76 @@
+---
+- name: Install K3s and Helm on Raspberry Pi
+  hosts: raspberrypi
+  become: yes
+  vars:
+    k3s_version: "v1.32.6+k3s1"
+    helm_version: "v3.17.1"
+    helm_arch: "linux-arm64"
+    helm_tarball: "helm-{{ helm_version }}-{{ helm_arch }}.tar.gz"
+
+  tasks:
+    - name: Install prerequisites
+      apt:
+        name:
+          - curl
+          - tar
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Check if K3s is installed
+      command: k3s --version
+      register: k3s_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install K3s if missing or wrong version
+      shell: curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -
+      when: "'{{ k3s_version }}' not in k3s_check.stdout"
+
+    - name: Check if Helm is installed
+      command: helm version --short
+      register: helm_check
+      failed_when: false
+      changed_when: false
+
+    - name: Download Helm tarball
+      get_url:
+        url: https://get.helm.sh/{{ helm_tarball }}
+        dest: /tmp/{{ helm_tarball }}
+      when: "'{{ helm_version }}' not in helm_check.stdout"
+
+    - name: Extract Helm
+      unarchive:
+        src: /tmp/{{ helm_tarball }}
+        dest: /tmp
+        remote_src: yes
+      when: "'{{ helm_version }}' not in helm_check.stdout"
+
+    - name: Copy Helm binary to /usr/local/bin
+      copy:
+        src: /tmp/{{ helm_arch }}/helm
+        dest: /usr/local/bin/helm
+        mode: '0755'
+        remote_src: yes
+      when: "'{{ helm_version }}' not in helm_check.stdout"
+
+    - name: Verify K3s version
+      command: k3s --version
+      register: final_k3s_version
+      changed_when: false
+
+    - name: Verify Helm version
+      command: helm version --short
+      register: final_helm_version
+      changed_when: false
+
+    - name: Show installed K3s version
+      debug:
+        msg: "{{ final_k3s_version.stdout }}"
+
+    - name: Show installed Helm version
+      debug:
+        msg: "{{ final_helm_version.stdout }}"
