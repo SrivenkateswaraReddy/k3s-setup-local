@@ -12,10 +12,9 @@ pipeline {
     }
     
     stages {
-        stage('Checkout') {
+       stage('Checkout') {
             steps {
-                checkout scm
-                echo "Checked out code from repository"
+                git branch: 'feature/ansible-final-setup', url: 'https://github.com/SrivenkateswaraReddy/k3s-setup-local.git'
             }
         }
         
