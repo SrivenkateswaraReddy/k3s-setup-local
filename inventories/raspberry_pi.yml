@@ -1,0 +1,6 @@
+all:
+  hosts:
+    raspberrypi5:
+      ansible_host: 192.168.1.100   # Replace with your Pi's IP
+      ansible_user: pi
+      ansible_python_interpreter: /usr/bin/python3
