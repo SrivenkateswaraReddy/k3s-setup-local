@@ -1,2 +1,3 @@
-# k3s-setup-local
-k3s-setup-local on local raspberry pi 5
+---
+
+ansible-playbook -i inventory.ini update_upgrade.yml --ask-become-pass -vvvv

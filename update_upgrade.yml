@@ -1,0 +1,48 @@
+---
+- name: Update and Upgrade Ubuntu on Raspberry Pi
+  hosts: raspberrypi
+  become: yes
+  tasks:
+  - name: Update apt cache
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: Upgrade all packages
+    ansible.builtin.apt:
+      upgrade: dist
+      autoremove: yes
+      autoclean: yes
+
+- name: Check if Helm and k3s are installed
+  hosts: raspberrypi
+  become: yes
+  gather_facts: no
+
+  tasks:
+  - name: Check if Helm is installed
+    ansible.builtin.command: helm version --short
+    register: helm_check
+    ignore_errors: yes
+
+  - name: Display Helm installation status
+    ansible.builtin.debug:
+      msg: >
+        {% if helm_check.rc == 0 %}
+          Helm is installed: {{ helm_check.stdout }}
+        {% else %}
+          Helm is not installed
+        {% endif %}
+
+  - name: Check if k3s is installed
+    ansible.builtin.command: k3s --version
+    register: k3s_check
+    ignore_errors: yes
+
+  - name: Display k3s installation status
+    ansible.builtin.debug:
+      msg: >
+        {% if k3s_check.rc == 0 %}
+          k3s is installed: {{ k3s_check.stdout }}
+        {% else %}
+          k3s is not installed
+        {% endif %}
